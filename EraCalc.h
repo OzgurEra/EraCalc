@@ -83,7 +83,7 @@ private:
 				NEXT();
 				SetToken(Tk_Minus);
 				return;
-            case '^':
+			case '^':
 				NEXT();
 				SetToken(Tk_Power);
 				return;
