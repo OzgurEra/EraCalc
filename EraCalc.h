@@ -12,18 +12,34 @@
 class EraCalc {
 public:
 	typedef double Real;
+	enum Status {
+		Success,
+		Failed
+	};
 	
-	EraCalc(){
+	EraCalc() {
 	}
 	
-	Real Evaluate(const char* in) {
+	Status Evaluate(const char* in, Real* out) {
 		mStackTop = 0;
+		mErrorMsg[0] = '\0';
+		mHasError = false;
 		mCursorPos = (char*)in;
 		NextToken();
-		while(GetToken() != Tk_EOF) {
+		while(GetToken() != Tk_EOF && (mHasError == false)) { 
 			ParseExpression();
 		}
-		return mStack[0];
+		
+		if(mHasError == false) {
+			*out = mStack[0];
+			return Success;
+		} else {
+			return Failed;
+		}
+	}
+	
+	const char* GetErrorMessage() const {
+		return mErrorMsg;
 	}
 private:
 	enum Token {
@@ -91,8 +107,10 @@ private:
 				if (isdigit(CURCHAR)) {
 					ParseNumber();
 					SetToken(Tk_Number);
-				}else{
+				} else {
 					SetToken(Tk_Unknown);
+					snprintf(mErrorMsg, 128, "%s", "Unknown token");
+					mHasError = true;
 				}
 				return;
 			}
@@ -136,7 +154,8 @@ private:
 		case Tk_Power:
 			return '^';
 		default: 
-			assert(0 && "Unknown operator Token");
+			snprintf(mErrorMsg, 128, "%s", "Unknown operator");
+			mHasError = true;
 			return '\0';
 		}
 	}
@@ -207,7 +226,8 @@ private:
 			NextToken(); 
 			ParseExpression(); 
 			if(GetToken() != Tk_ParenthesisClose){
-				assert(0 && "Expected ')'");
+				snprintf(mErrorMsg, 128, "%s", "Expected ')'");
+				mHasError = true; 
 			}
 			NextToken();
 			break;
@@ -233,7 +253,9 @@ private:
 			break;
 		case '/':
 			if(r == 0) {
-				assert(0 && "Division by zero");
+				snprintf(mErrorMsg, 128, "%s", "Division by zero");
+				mHasError = true;
+				return;
 			}
 			PushTerm(l / r);
 			break;
@@ -255,11 +277,14 @@ private:
 		return mStack[--mStackTop];
 	}
 	
+	
 	Real mStack[64];
 	int mStackTop;
 	char* mCursorPos;
 	Real mNumber;
 	Token mCurrentToken;
+	char mErrorMsg[128];
+	bool mHasError;
 };
 
 #undef CURCHAR

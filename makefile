@@ -18,7 +18,7 @@ $(PROGRAM):$(OBJS)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling source file: $<" 
 	$(CXX) $(COPTS) -c $<
 
-Main.o: Main.cpp
+Main.o: Main.cpp EraCalc.h
 
 clean : 
 	rm -f $(PROGRAM) *.o
