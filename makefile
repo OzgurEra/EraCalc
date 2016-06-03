@@ -1,11 +1,11 @@
 PROGRAM = eracalc
-CXX = g++ -std=c++11
+CXX = g++ -std=c++11 -O2
 LIBS =
 INCLUDEDIRS =
 COPTS = $(INCLUDEDIRS)$(LIBS)-fpermissive
 CMAKE_COMMAND = /usr/bin/cmake
 
-OBJS = Main.o
+OBJS = Main.o EraCalc.o
 
 .SUFFIXES: .cpp .o
 
@@ -18,7 +18,8 @@ $(PROGRAM):$(OBJS)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling source file: $<" 
 	$(CXX) $(COPTS) -c $<
 
-Main.o: Main.cpp EraCalc.h
+Main.o: Main.cpp
+EraCalc.o: EraCalc.cpp EraCalc.h
 
 clean : 
 	rm -f $(PROGRAM) *.o
