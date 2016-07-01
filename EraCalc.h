@@ -3,19 +3,24 @@
 #include <cmath>
 #include <cstdlib>
 #include <cctype>
-
+#include <cstdarg>
 #define STACK_SIZE 32
 class EraCalc {
 public:
 	typedef double Real;
+	
+	struct Constant {
+		char* name;
+		Real value;
+		Constant* next;
+	};
 	
 	enum Status {
 		Success,
 		Failed
 	};
 	
-	EraCalc() {
-	}
+	EraCalc();
 	
 	Status Evaluate(const char* in, Real* out);
 	
@@ -37,7 +42,7 @@ private:
 		Tk__MAXTOKENS__
 	};
 	
-	void RaiseError(const char* msg);
+	void RaiseError(const char* s, ...);
 	void SetToken(Token tok);
 	void NextToken();
 	Token GetToken() const;
@@ -45,6 +50,9 @@ private:
 	
 	bool ParseNumber();
 	bool ParseConstant();
+	
+	bool MatchConstant(const char* name, Real* value);
+	void RegisterConstant(const char* name, int namelen,  Real value);
 	
 	char GetOperatorByToken(Token tok);
 	
@@ -66,5 +74,6 @@ private:
 	Token mCurrentToken;
 	bool mHasError;
 	char* mCursorPos;
+	Constant* mConstantsRoot;
 };
 

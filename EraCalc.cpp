@@ -9,6 +9,13 @@
 #define M_PHI 1.61803398875
 #endif
 
+EraCalc::EraCalc() {
+	mConstantsRoot = nullptr;
+	RegisterConstant("pi", 2, M_PI);
+	RegisterConstant("e", 1, M_E);
+	RegisterConstant("phi", 3, M_PHI);
+}
+	
 EraCalc::Status EraCalc::Evaluate(const char* in, EraCalc::Real* out) {
 	mStackTop = 0;
 	mErrorMsg[0] = '\0';
@@ -34,8 +41,11 @@ const char* EraCalc::GetErrorMessage() const {
 	return mErrorMsg;
 }
 	
-void EraCalc::RaiseError(const char* msg) {
-	snprintf(mErrorMsg, 64, "%s", msg);
+void EraCalc::RaiseError(const char* s, ...) {
+	va_list vl;
+	va_start(vl, s);
+	vsnprintf(mErrorMsg, 64, s, vl);
+	va_end(vl);
 	mHasError = true;
 }
 	
@@ -88,16 +98,13 @@ void EraCalc::NextToken() {
 			if (isdigit(CURCHAR)) {
 				if(ParseNumber()) {
 					SetToken(Tk_Number);
-					return;
-				}		
+				}	
+				return;	
 			} else if (isalpha(CURCHAR)) {
 				if(ParseConstant()){
 					SetToken(Tk_Number);
-					return;
-				} else {
-					RaiseError("unknown constant");
-					return;
-				}
+				} 
+				return;
 			} 
 			
 			SetToken(Tk_Unknown);
@@ -132,11 +139,42 @@ bool EraCalc::ParseConstant() {
 	}
 	tmp[cursor] = '\0';
 	
-	#define MATCH_CONSTANT(name, val) if(strcmp(tmp, name) == 0) {mNumber = val;return true;}
-	MATCH_CONSTANT("pi", M_PI);
-	MATCH_CONSTANT("e", M_E);
-	MATCH_CONSTANT("phi", M_PHI);
+	if(MatchConstant(tmp, &mNumber)){
+		return true;
+	} else {
+		RaiseError("unknown constant '%s'", tmp);
+		return false;
+	}
+}
+
+bool EraCalc::MatchConstant(const char* name, Real* value) {
+	Constant* cnst = mConstantsRoot;
+	while(cnst) {
+		if(strcmp(cnst->name, name) == 0) {
+			*value = cnst->value;
+			return true;
+		}
+		cnst = cnst->next;
+	}
 	return false;
+}
+
+void EraCalc::RegisterConstant(const char* name, int namelen, Real value) {
+	if (namelen == 0)
+		namelen = strlen(name);
+		
+	if(mConstantsRoot == nullptr) {
+		mConstantsRoot = new Constant;
+		mConstantsRoot->next = nullptr;
+	} else {
+		Constant* last = mConstantsRoot;
+		mConstantsRoot = new Constant;
+		mConstantsRoot->next = last;
+	}
+	namelen += 1;
+	mConstantsRoot->name = new char[namelen];
+	memcpy(mConstantsRoot->name, name, namelen);
+	mConstantsRoot->value = value;
 }
 
 EraCalc::Real EraCalc::GetNumber() const {
