@@ -1,4 +1,4 @@
 node {
     echo 'Test'
-    archiveArtifacts 'Main.cpp'
+    archiveArtifacts './Main.cpp'
 }
